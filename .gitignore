@@ -1,0 +1,8 @@
+.stack-work/*
+*~
+*#
+/dist
+\#*#
+.#*
+/dist-newstyle
+/result
