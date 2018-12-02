@@ -191,16 +191,18 @@ joinDropzone :: forall t m a.
   ( Adjustable t m
   , DomBuilder t m
   , DomBuilderSpace m ~ GhcjsDomSpace
+  , MonadFix m
   , MonadJSM m
   , MonadJSM (Performable m)
   , MonadHold t m
   -- DEBUG
-  -- , PostBuild t m
+  , PostBuild t m
   ) => DropzoneConfig t m
     -> Dropzone t m a
     -> m (Dropzone t m a)
-joinDropzone dzConfig (Dropzone pl dr) = do
-  let e_drDrop = _draggable_drop dr
+joinDropzone dzConfig dz = do
+  let dr = _dropzone_draggable dz
+      e_drDrop = _draggable_drop dr
   rec
     -- TODO Make Dragzone a higher-order component for DropzoneConfig or customize class
     (el_dz, pl_dz) <- _dropzoneConfig_container dzConfig $ do
@@ -209,7 +211,7 @@ joinDropzone dzConfig (Dropzone pl dr) = do
         , domEvent Mouseleave el_dz $> False
         ]
       let g = (&&) <$> _dropzoneConfig_enabled dzConfig <*> current d_mouseover
-      linkPortal (gate g e_drDrop $> ()) pl
+      linkPortal (gate g e_drDrop $> ()) $ _dropzone_portal dz
   pure $ Dropzone pl_dz dr
 
 makeDocumentDragzone ::

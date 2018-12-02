@@ -59,8 +59,8 @@ data Portal t m a where
     } -> Portal t m a
 
 -- | View the widget whenever the flag is set for the particular node.
-portalView :: forall t m a. Reflex t => Int -> Porter t m a -> m (Event t a)
-portalView i pr@(Porter _ _ _) =
+portalView :: forall t m a. PortalConstraints t m => Int -> Porter t m a -> m (Event t a)
+portalView i pr =
   let d = snd . elemAt i <$> _porter_map pr
   in  fmapMaybe id <$> networkView (d <&> bool (pure Nothing) (Just <$> _porter_widget pr))
   -- render placeholder? (pure Nothing)
@@ -110,10 +110,11 @@ linkPortal :: forall t m a. PortalConstraints t m
   => Event t ()
   -> Portal t m a
   -> m (Portal t m a)
-linkPortal e (Portal k m evs pr) = do
-  let i = succ k
+linkPortal e pl = do
+  let i = succ $ _portal_key pl
+      pr = _portal_porter pl
   e_x <- portalView i pr
-  pure $ Portal i (insert i e m) (e_x : evs) pr
+  pure $ Portal i (insert i e $ _portal_map pl) (e_x : _portal_updates pl) pr
 
 -- EVENTS
 -- PortalEntered
